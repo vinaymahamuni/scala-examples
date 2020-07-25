@@ -50,18 +50,6 @@ class FutureExamplesSpec extends AnyFlatSpec with Matchers {
     Await.result(future, Duration.Inf) shouldBe 30
   }
 
-  it should "handle multiple futures using flatmap using for comprehension" in {
-    val future =
-      for {
-        a <- doComputation(1)
-        b <- doComputation(a)
-        c <- doComputation(b)
-        d <- doComputation(c)
-      } yield (a + b + c + d)
-
-    Await.result(future, Duration.Inf) shouldBe 30
-  }
-
   it should "use for-yield block to perform sequential computations in the future." in {
     val future =
       for {
