@@ -1,4 +1,4 @@
-import FutureExamples.doComputation
+import FutureExamples.{doComputation, elapsed}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -62,4 +62,21 @@ class FutureExamplesSpec extends AnyFlatSpec with Matchers {
     Await.result(future, Duration.Inf) shouldBe 30
   }
 
+  it should "check elapsed time of future" in {
+    val future =
+      for {
+        a <- doComputation(1)
+        b <- doComputation(a)
+        c <- doComputation(b)
+        d <- doComputation(c)
+      } yield (a + b + c + d)
+
+
+    val (elapsedTime, _) = elapsed {
+      Await.result(future, Duration.Inf) shouldBe 30
+    }
+
+    elapsedTime shouldEqual 4.0 +- 0.1
+
+  }
 }
