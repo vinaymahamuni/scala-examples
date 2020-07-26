@@ -4,7 +4,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, Future}
 import scala.util.Success
 
 class FutureExamplesSpec extends AnyFlatSpec with Matchers {
@@ -103,7 +103,6 @@ class FutureExamplesSpec extends AnyFlatSpec with Matchers {
     elapsedTime shouldEqual 1.0 +- 0.1
   }
 
-
   it should "use for-yield block to perform parallel computations in the future. ex2" in {
     // All futures are created up front and started in parallel.
     // The entire computation takes about 1 second.
@@ -124,7 +123,6 @@ class FutureExamplesSpec extends AnyFlatSpec with Matchers {
     elapsedTime shouldEqual 1.0 +- 0.1
   }
 
-
   it should "perform parallel computations and wait for all to finish" in {
     // This starts all the Future values in parallel.
     // The computation takes about 1 second.
@@ -138,4 +136,31 @@ class FutureExamplesSpec extends AnyFlatSpec with Matchers {
     }
     elapsedTime shouldEqual 1.0 +- 0.1
   }
+
+  it should "Future traverse" in {
+    val futureOperations = List(doComputation(1), doComputation(2), doComputation(3), doComputation(4))
+
+    val traversedFuture: Future[List[Int]] = Future.traverse(futureOperations) {
+      futureValue => futureValue.map(value => value * value)
+    }
+
+    val (elapsedTime, _) = elapsed {
+      Await.result(traversedFuture, Duration.Inf) shouldBe List(4, 16, 36, 64)
+    }
+    elapsedTime shouldBe 1.0 +- 0.1
+  }
+
+  it should "Future foldLeft" in {
+    val futureOperations = List(doComputation(1), doComputation(2), doComputation(3), doComputation(4))
+
+    val traversedFuture: Future[Int] = Future.foldLeft(futureOperations)(0) {
+      (acc, foldLeft) => acc + foldLeft
+    }
+
+    val (elapsedTime, _) = elapsed {
+      Await.result(traversedFuture, Duration.Inf) shouldBe 20
+    }
+    elapsedTime shouldBe 1.0 +- 0.1
+  }
+
 }
