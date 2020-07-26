@@ -2,15 +2,14 @@ import FutureExamples.{doComputation, elapsed}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.ExecutionContext.global
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.util.Success
 
 class FutureExamplesSpec extends AnyFlatSpec with Matchers {
-  private implicit val ex: ExecutionContextExecutor = global
 
-  it should " example 1" in {
+  it should " simple future example" in {
 
     val future = doComputation(1)
 
