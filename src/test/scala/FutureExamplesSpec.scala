@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 class FutureExamplesSpec extends AnyFlatSpec with Matchers {
 
@@ -153,12 +153,52 @@ class FutureExamplesSpec extends AnyFlatSpec with Matchers {
   it should "Future foldLeft" in {
     val futureOperations = List(doComputation(1), doComputation(2), doComputation(3), doComputation(4))
 
-    val traversedFuture: Future[Int] = Future.foldLeft(futureOperations)(0) {
-      (acc, foldLeft) => acc + foldLeft
-    }
+    val traversedFuture: Future[Int] = Future.foldLeft(futureOperations)(0)(_ + _)
 
     val (elapsedTime, _) = elapsed {
       Await.result(traversedFuture, Duration.Inf) shouldBe 20
+    }
+    elapsedTime shouldBe 1.0 +- 0.1
+  }
+
+  it should "Future reduceLeft" in {
+    val futureOperations = List(doComputation(1), doComputation(2), doComputation(3), doComputation(4))
+
+    val traversedFuture: Future[Int] = Future.reduceLeft(futureOperations)(_ + _)
+
+
+    val (elapsedTime, _) = elapsed {
+      Await.result(traversedFuture, Duration.Inf) shouldBe 20
+    }
+    elapsedTime shouldBe 1.0 +- 0.1
+  }
+
+  it should "Future onComplete usecase" in {
+    val future = doComputation(1)
+
+    future.onComplete {
+      case Success(data) => println(s"Results $data")
+      case Failure(e) => println(s"Error processing future operations, error = ${e.getMessage}")
+    }
+
+  }
+
+  it should "Future zip combines result of two future in tuple" in {
+    val zipTuple: Future[(Int, Int)] = doComputation(3) zip doComputation(2)
+
+    val (elapsedTime, _) = elapsed {
+      Await.result(zipTuple, Duration.Inf) shouldBe(6, 4)
+    }
+    elapsedTime shouldBe 1.0 +- 0.1
+  }
+
+  it should "Future firstCompletedOf will return result of future which completes first" in {
+    val futureOperations = List(doComputation(1), doComputation(2), doComputation(3), doComputation(4))
+
+    val traversedFuture: Future[Int] = Future.firstCompletedOf(futureOperations)
+
+    val (elapsedTime, _) = elapsed {
+      Await.result(traversedFuture, Duration.Inf) shouldBe oneOf(2, 4, 6, 8)
     }
     elapsedTime shouldBe 1.0 +- 0.1
   }
